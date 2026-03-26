@@ -11,6 +11,16 @@ const Cart = () => {
   const dispatch = useDispatch();
   const { items, totalQuantity, totalAmount } = useSelector((state) => state.cart);
   
+  // Function to calculate total cost for each item
+  const calculateItemTotal = (item) => {
+    return item.price * item.quantity;
+  };
+  
+  // Function to calculate total cart amount (explicit calculation)
+  const calculateTotalCartAmount = () => {
+    return items.reduce((total, item) => total + (item.price * item.quantity), 0);
+  };
+  
   // Handle increase quantity
   const handleIncrease = (id) => {
     dispatch(increaseQuantity(id));
@@ -52,78 +62,83 @@ const Cart = () => {
     <div className="shopping-cart">
       <h2>Your Shopping Cart</h2>
       
-      {/* Show total number of plants in the cart */}
+      {/* Cart Summary Section - Shows total number and total amount */}
       <div className="cart-summary">
-        <div>
-          <strong>Total Items:</strong> {totalQuantity} plant{totalQuantity !== 1 ? 's' : ''}
+        <div className="total-items">
+          <strong>Total Number of Plants:</strong> {totalQuantity} plant{totalQuantity !== 1 ? 's' : ''}
         </div>
-        {/* Show total cost of all items in the cart */}
-        <div>
-          <strong>Total Amount:</strong> ${totalAmount.toFixed(2)}
+        <div className="total-amount">
+          <strong>Total Cart Amount:</strong> ${calculateTotalCartAmount().toFixed(2)}
         </div>
       </div>
       
       <div className="cart-items">
-        {items.map(item => (
-          <div key={item.id} className="cart-item">
-            {/* Display thumbnail for each plant type */}
-            <img 
-              src={item.image} 
-              alt={item.name}
-              className="cart-item-image"
-              onError={(e) => {
-                e.target.src = '/images/placeholder.jpg';
-              }}
-            />
-            
-            <div className="cart-item-details">
-              {/* Display plant name */}
-              <div className="cart-item-name">{item.name}</div>
-              {/* Display unit price */}
-              <div className="cart-item-price">
-                Unit Price: ${item.price.toFixed(2)}
+        {items.map(item => {
+          // Calculate total cost for this specific plant
+          const itemTotal = calculateItemTotal(item);
+          
+          return (
+            <div key={item.id} className="cart-item">
+              {/* Display thumbnail for each plant type */}
+              <img 
+                src={item.image} 
+                alt={item.name}
+                className="cart-item-image"
+                onError={(e) => {
+                  e.target.src = '/images/placeholder.jpg';
+                }}
+              />
+              
+              <div className="cart-item-details">
+                {/* Display plant name */}
+                <div className="cart-item-name">{item.name}</div>
+                {/* Display unit price */}
+                <div className="cart-item-unit-price">
+                  Unit Price: ${item.price.toFixed(2)}
+                </div>
+                {/* Display total cost for this plant type (quantity × unit price) */}
+                <div className="cart-item-total">
+                  <strong>Total for {item.name}:</strong> ${itemTotal.toFixed(2)}
+                </div>
               </div>
-              {/* Show total cost for each plant in the cart */}
-              <div>
-                Subtotal: ${item.totalPrice.toFixed(2)}
+              
+              {/* Increase and decrease buttons */}
+              <div className="cart-item-quantity">
+                {/* Decrease button - decrements quantity */}
+                <button
+                  className="quantity-btn"
+                  onClick={() => handleDecrease(item.id)}
+                  aria-label="Decrease quantity"
+                >
+                  -
+                </button>
+                <span className="item-quantity" style={{ minWidth: '30px', textAlign: 'center' }}>
+                  {item.quantity}
+                </span>
+                {/* Increase button - increments quantity */}
+                <button
+                  className="quantity-btn"
+                  onClick={() => handleIncrease(item.id)}
+                  aria-label="Increase quantity"
+                >
+                  +
+                </button>
               </div>
-            </div>
-            
-            {/* Increase and decrease buttons */}
-            <div className="cart-item-quantity">
-              {/* Decrease button - decrements quantity */}
+              
+              {/* Delete button for each item */}
               <button
-                className="quantity-btn"
-                onClick={() => handleDecrease(item.id)}
-                aria-label="Decrease quantity"
+                className="delete-btn"
+                onClick={() => handleDelete(item.id)}
+                aria-label="Remove item"
               >
-                -
-              </button>
-              <span style={{ minWidth: '30px', textAlign: 'center' }}>
-                {item.quantity}
-              </span>
-              {/* Increase button - increments quantity */}
-              <button
-                className="quantity-btn"
-                onClick={() => handleIncrease(item.id)}
-                aria-label="Increase quantity"
-              >
-                +
+                Delete
               </button>
             </div>
-            
-            {/* Delete button for each item */}
-            <button
-              className="delete-btn"
-              onClick={() => handleDelete(item.id)}
-              aria-label="Remove item"
-            >
-              Delete
-            </button>
-          </div>
-        ))}
+          );
+        })}
       </div>
       
+      {/* Cart Actions Section */}
       <div className="cart-actions">
         {/* Continue shopping button linking back to product listing page */}
         <Link to="/products">
